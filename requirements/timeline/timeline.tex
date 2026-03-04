@@ -133,6 +133,11 @@ This document captures functional and non-functional requirements for the \textb
   \item Users cannot reorder entries.
 \end{itemize}
 
+\textbf{Technology and Data Variations}
+\begin{itemize}[nosep]
+  \item Event type values may be selected from a predefined list (e.g., decision, mitigation, responder action, system event).
+\end{itemize}
+
 \textbf{Frequency of Occurrence:} High during active incidents.
 
 % ---------- UC-TL-3 ----------
@@ -155,32 +160,125 @@ This document captures functional and non-functional requirements for the \textb
 
 \textbf{Success Guarantee (Postconditions)}
 \begin{itemize}[nosep]
-  \item Updated content is saved.
-  \item A revision record exists preserving the previous version.
+  \item Updated entry content is saved.
+  \item A revision record is created and previous versions remain accessible.
+  \item The original event timestamp remains unchanged.
+\end{itemize}
+
+\textbf{Main Success Scenario}
+\begin{enumerate}[nosep]
+  \item User opens the incident timeline.
+  \item User selects an existing timeline entry.
+  \item User selects ``Edit.''
+  \item System displays the current entry content.
+  \item User modifies the content and submits changes.
+  \item System saves the updated entry.
+  \item System stores the prior version in revision history.
+  \item System indicates the entry has been edited and provides access to revisions.
+\end{enumerate}
+
+\textbf{Extensions}
+\begin{itemize}[nosep]
+  \item \textbf{5a. Concurrent edits (conflict)}
+    \begin{enumerate}[nosep]
+      \item System detects a conflict.
+      \item System prompts the user to refresh and reapply changes (or merge, if supported).
+    \end{enumerate}
+
+  \item \textbf{2a/5b. User not authorized}
+    \begin{enumerate}[nosep]
+      \item System rejects the edit and displays an authorization error.
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Special Requirements}
+\begin{itemize}[nosep]
+  \item Revision history must preserve previous versions.
+  \item Users cannot modify the original timestamp of a timeline entry.
+\end{itemize}
+
+\textbf{Technology and Data Variations}
+\begin{itemize}[nosep]
+  \item Revision history may be displayed as a list of prior versions for a selected entry.
 \end{itemize}
 
 \textbf{Frequency of Occurrence:} Medium.
 
+% ---------- UC-TL-4 ----------
+\subsection*{Use Case UC-TL-4: Filter Timeline by Event Type}
+\textbf{Primary Actor:} User (Responder/Engineer/Stakeholder with access) \\
+\textbf{Supporting Actors:} System
+
+\textbf{Stakeholders and Interests}
+\begin{itemize}[nosep]
+  \item \textbf{Responders:} want to quickly find relevant actions and decisions.
+  \item \textbf{Stakeholders:} want a simplified view of relevant events.
+\end{itemize}
+
+\textbf{Preconditions}
+\begin{itemize}[nosep]
+  \item An incident exists.
+  \item User has permission to view the timeline.
+\end{itemize}
+
+\textbf{Success Guarantee (Postconditions)}
+\begin{itemize}[nosep]
+  \item Timeline view updates to show only entries matching selected event type(s).
+  \item Underlying stored events and ordering are unchanged.
+\end{itemize}
+
+\textbf{Main Success Scenario}
+\begin{enumerate}[nosep]
+  \item User opens the incident timeline.
+  \item System displays the full timeline in chronological order.
+  \item User selects one or more event type filters.
+  \item System updates the view to show only matching entries.
+  \item User clears filters to return to the full timeline.
+\end{enumerate}
+
+\textbf{Extensions}
+\begin{itemize}[nosep]
+  \item \textbf{3a. No entries match}
+    \begin{enumerate}[nosep]
+      \item System shows an empty-state message.
+      \item System allows the user to clear filters to return to full view.
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Special Requirements}
+\begin{itemize}[nosep]
+  \item Filtering must not alter underlying stored ordering.
+\end{itemize}
+
+\textbf{Technology and Data Variations}
+\begin{itemize}[nosep]
+  \item Filters may be single-select or multi-select depending on UI configuration.
+\end{itemize}
+
+\textbf{Frequency of Occurrence:} Medium/High.
+
 \section{Supplementary Specifications (Non-Functional Requirements)}
 \textbf{NFR-TL-1 (Performance / Real-time Collaboration):} Timeline updates shall be reflected to all active users within \textbf{2 seconds} under normal operating conditions.
+
+\textbf{Explanation:} This requirement applies to system-generated events, manual entries, edits, and timeline refreshes. Compliance is measured by the time from when an event is accepted by the system to when it becomes visible to other active users.
 
 \newpage
 
 \section{Use Case Diagram (Timeline)}
-\textit{Note: This diagram includes only the Timeline use cases.}
+\textit{Note: This diagram includes only the Timeline use cases. The team will extend the diagram to include other system use cases.}
 
 \begin{center}
 \resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
   actor/.style={draw, ellipse, minimum width=3.0cm, minimum height=1.0cm, align=center},
-  usecase/.style={draw, ellipse, minimum width=6.2cm, minimum height=1.0cm, align=center},
-  system/.style={draw, rounded corners, inner sep=0.6cm}
+  usecase/.style={draw, ellipse, minimum width=6.2cm, minimum height=1.0cm, align=center}
 ]
 
   \node[actor] (userA) at (-6,1) {Authorized User\\(Responder/Engineer)};
   \node[actor] (viewer) at (-6,-1) {Viewer\\(Stakeholder/User)};
 
-  \node[usecase] (uc1) at (2,2) {Record System-Generated Timeline Event};
+  % Renamed UC-TL-1 label to be diagram-friendly (actor-driven) while still covering system events.
+  \node[usecase] (uc1) at (2,2) {View Timeline (includes system events)};
   \node[usecase] (uc2) at (2,0.7) {Add Manual Timeline Entry};
   \node[usecase] (uc3) at (2,-0.7) {Edit Timeline Entry};
   \node[usecase] (uc4) at (2,-2) {Filter Timeline};
@@ -195,6 +293,7 @@ This document captures functional and non-functional requirements for the \textb
 \end{center}
 
 \section{Conceptual Class Diagram (Timeline Domain Model)}
+\textit{Note: Conceptual classes only. No methods, access modifiers, or data types.}
 
 \begin{center}
 \begin{tikzpicture}[
